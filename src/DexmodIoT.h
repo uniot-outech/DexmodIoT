@@ -4,6 +4,37 @@
 #include <PubSubClient.h>
 #include <WiFiClientSecure.h>
 
+enum class DexmodCommandValueType {
+  Boolean,
+  Number,
+  String,
+  Invalid,
+};
+
+class DexmodCommand {
+ public:
+  const char* id() const;
+  const char* control() const;
+  DexmodCommandValueType valueType() const;
+  bool booleanValue() const;
+  double numberValue() const;
+  const char* stringValue() const;
+  time_t expiresAt() const;
+
+ private:
+  friend class DexmodIoT;
+  String id_;
+  String control_;
+  String stringValue_;
+  DexmodCommandValueType valueType_ = DexmodCommandValueType::Invalid;
+  bool booleanValue_ = false;
+  double numberValue_ = 0;
+  time_t expiresAt_ = 0;
+};
+
+class DexmodIoT;
+typedef void (*DexmodCommandHandler)(DexmodIoT& dexmod, const DexmodCommand& command);
+
 class DexmodTelemetry {
  public:
   DexmodTelemetry();
@@ -45,19 +76,35 @@ class DexmodIoT {
   bool publish(const char* metricName, double value, unsigned int decimalPlaces = 2);
   bool publish(const char* metricName, bool value);
 
+  // The callback runs from loop(). Keep it short and non-blocking.
+  void onCommand(DexmodCommandHandler handler);
+  bool acknowledge(const DexmodCommand& command, bool reportedState);
+  bool acknowledge(const DexmodCommand& command, double reportedState, unsigned int decimalPlaces = 2);
+  bool acknowledge(const DexmodCommand& command, const char* reportedState);
+  bool fail(const DexmodCommand& command, const char* errorCode, const char* message);
+
   const char* lastError() const;
   int mqttState();
   uint32_t lastPublishedAt() const;
 
  private:
   static constexpr uint32_t kRetryIntervalMs = 3000;
+  static constexpr uint32_t kWifiConnectTimeoutMs = 20000;
   static constexpr uint32_t kValidUnixTime = 1700000000UL;
   static constexpr size_t kMqttBufferBytes = 4096;
+  static constexpr size_t kRecentCommandCount = 8;
 
   void maintainWifi(uint32_t nowMs);
   void maintainClock();
   void maintainMqtt(uint32_t nowMs);
   bool publishJson(const String& metricsJson);
+  void handleMqttMessage(char* topic, uint8_t* payload, unsigned int length);
+  bool parseCommand(const String& json, DexmodCommand& command);
+  bool publishAcknowledgement(const DexmodCommand& command, bool success, const String& stateJson, const char* errorCode, const char* message);
+  bool rememberCommand(const String& commandId);
+  static bool extractJsonString(const String& json, const char* key, String& value);
+  static bool extractJsonValue(const String& json, const char* key, String& value);
+  static bool parseIsoTimestamp(const String& value, time_t& timestamp);
   String nextMessageId();
   static String jsonString(const String& value);
   void setError(const char* message);
@@ -69,6 +116,11 @@ class DexmodIoT {
   String deviceId_;
   String deviceToken_;
   String topic_;
+  String commandTopic_;
+  String acknowledgementTopic_;
+  String recentCommandIds_[kRecentCommandCount];
+  size_t nextRecentCommand_;
+  DexmodCommandHandler commandHandler_;
   const char* lastError_;
   uint32_t minimumPublishIntervalMs_;
   uint32_t lastWifiAttemptAt_;
@@ -77,6 +129,7 @@ class DexmodIoT {
   uint32_t bootId_;
   uint32_t sequence_;
   bool started_;
+  bool wifiAttempted_;
   bool hasPublished_;
   bool clockRequested_;
   bool clockReady_;

@@ -1,8 +1,13 @@
 DexmodIoT	KEYWORD1
 DexmodTelemetry	KEYWORD1
+DexmodCommand	KEYWORD1
+DexmodCommandValueType	KEYWORD1
 begin	KEYWORD2
 loop	KEYWORD2
 publish	KEYWORD2
+onCommand	KEYWORD2
+acknowledge	KEYWORD2
+fail	KEYWORD2
 waitUntilReady	KEYWORD2
 connected	KEYWORD2
 lastError	KEYWORD2
