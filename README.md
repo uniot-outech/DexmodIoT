@@ -121,7 +121,7 @@ baud, which helps distinguish Wi-Fi, clock synchronization, and MQTT failures.
 
 The contents of this folder are already arranged as an Arduino library root.
 Copy this folder to a repository named `DexmodIoT`, tag releases using semantic
-versions such as `v0.2.3`, and attach a ZIP whose top-level directory is
+versions such as `v0.3.1`, and attach a ZIP whose top-level directory is
 `DexmodIoT`. See [PUBLISHING.md](PUBLISHING.md) for the release checklist.
 
 ## License

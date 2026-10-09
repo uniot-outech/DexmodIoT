@@ -88,6 +88,7 @@ class DexmodIoT {
   uint32_t lastPublishedAt() const;
 
  private:
+  friend class DexmodOTA;
   static constexpr uint32_t kRetryIntervalMs = 3000;
   static constexpr uint32_t kWifiConnectTimeoutMs = 20000;
   static constexpr uint32_t kValidUnixTime = 1700000000UL;

@@ -15,7 +15,7 @@ void setup() {
     WIFI_PASSWORD,
     DEXMOD_DEVICE_ID,
     DEXMOD_DEVICE_TOKEN,
-    15
+    40
   );
 
   if (!dexmod.waitUntilReady(30000)) {
@@ -27,7 +27,7 @@ void setup() {
 void loop() {
   dexmod.loop();
 
-  if (millis() - lastSampleAt < 15000) return;
+  if (millis() - lastSampleAt < 40000) return;
   lastSampleAt = millis();
 
   DexmodTelemetry telemetry;
